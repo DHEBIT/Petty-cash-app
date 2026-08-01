@@ -4,12 +4,14 @@ import Login from './pages/Login.jsx';
 import EmployeeDashboard from './pages/EmployeeDashboard.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import { useAuth } from './context/AuthContext.jsx';
+import ResetPassword from './pages/ResetPassword.jsx';
 
 export default function App() {
   const { profile } = useAuth();
 
   return (
     <Routes>
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/login" element={<Login />} />
       <Route
         path="/"
