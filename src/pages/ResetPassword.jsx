@@ -1,12 +1,19 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import PasswordField from '../components/PasswordField.jsx';
 import { scorePassword } from '../utils/passwordStrength.js';
 
 export default function ResetPassword() {
   const navigate = useNavigate();
-  const [ready, setReady] = useState(false);
+  const [searchParams] = useSearchParams();
+  const tokenHash = searchParams.get('token_hash');
+  const type = searchParams.get('type');
+
+  const [verifying, setVerifying] = useState(false);
+  const [verified, setVerified] = useState(false);
+  const [verifyError, setVerifyError] = useState('');
+
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -15,21 +22,21 @@ export default function ResetPassword() {
 
   const strength = scorePassword(password);
 
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const accessToken = urlParams.get('access_token');
-    if (!accessToken) return;
-    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') setReady(true);
-    });
-
-    
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setReady(true);
-    });
-
-    return () => listener.subscription.unsubscribe();
-  }, []);
+  async function handleContinue() {
+    if (!tokenHash || type !== 'recovery') {
+      setVerifyError('This link is missing required information. Request a new one from the sign-in page.');
+      return;
+    }
+    setVerifying(true);
+    setVerifyError('');
+    const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' });
+    setVerifying(false);
+    if (error) {
+      setVerifyError('This link is invalid or has expired. Request a new one from the sign-in page.');
+      return;
+    }
+    setVerified(true);
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -61,15 +68,17 @@ export default function ResetPassword() {
           </div>
         </div>
 
-        {!ready && !done && (
-          <div className="alert alert-error">
-            This link is invalid or has expired. Request a new one from the sign-in page.
-          </div>
-        )}
-
         {done ? (
           <div className="alert alert-info">Password updated. Redirecting to sign in…</div>
-        ) : ready && (
+        ) : !verified ? (
+          <>
+            <p style={{ marginBottom: 14 }}>Click below to continue resetting your password.</p>
+            {verifyError && <div className="alert alert-error">{verifyError}</div>}
+            <button className="btn btn-primary btn-block" onClick={handleContinue} disabled={verifying}>
+              {verifying ? 'Verifying…' : 'Continue'}
+            </button>
+          </>
+        ) : (
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="field">
               <label htmlFor="password">New password</label>
@@ -111,4 +120,4 @@ export default function ResetPassword() {
       </div>
     </div>
   );
-} 
+}
