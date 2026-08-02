@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -6,6 +6,7 @@ export default function NotificationBell() {
   const { profile } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
+  const wrapRef = useRef(null);
 
   const load = useCallback(async () => {
     if (!profile) return;
@@ -34,6 +35,24 @@ export default function NotificationBell() {
     return () => { supabase.removeChannel(channel); };
   }, [profile]);
 
+  // Close when clicking anywhere outside the bell/dropdown
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    }
+    function handleEscape(e) {
+      if (e.key === 'Escape') setOpen(false);
+    }
+    document.addEventListener('click', handleClickOutside, true);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('click', handleClickOutside, true);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, []);
+
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   async function markAllRead() {
@@ -43,6 +62,13 @@ export default function NotificationBell() {
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
   }
 
+  async function clearAll() {
+    if (notifications.length === 0) return;
+    const ids = notifications.map((n) => n.id);
+    await supabase.from('notifications').delete().in('id', ids);
+    setNotifications([]);
+  }
+
   function toggleOpen() {
     const next = !open;
     setOpen(next);
@@ -50,13 +76,19 @@ export default function NotificationBell() {
   }
 
   return (
-    <div className="notif-bell-wrap">
+    <div className="notif-bell-wrap" ref={wrapRef}>
       <button className="notif-bell" onClick={toggleOpen} aria-label="Notifications">
         🔔
         {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
       </button>
       {open && (
         <div className="notif-dropdown">
+          <div className="notif-dropdown-header">
+            <span>Notifications</span>
+            {notifications.length > 0 && (
+              <button className="notif-clear-btn" onClick={clearAll}>Clear all</button>
+            )}
+          </div>
           {notifications.length === 0 ? (
             <div className="notif-empty">No notifications yet.</div>
           ) : (
@@ -72,4 +104,4 @@ export default function NotificationBell() {
       )}
     </div>
   );
-} 
+}

@@ -194,9 +194,17 @@ th.num { text-align: right; }
 
 .auth-screen {
   min-height: 100vh; display: flex; align-items: center; justify-content: center;
-  background: var(--navy); padding: 2rem 1rem;
+  padding: 2rem 1rem; position: relative; overflow: hidden;
+  background: url('/login-bg.jpg') center / cover no-repeat;
 }
-.auth-card { background: var(--surface); border-radius: 12px; padding: 2rem; max-width: 380px; width: 100%; }
+.auth-screen::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(160deg, rgba(16,36,61,0.82) 0%, rgba(16,36,61,0.6) 55%, rgba(11,26,44,0.85) 100%);
+}
+.auth-card {
+  background: var(--surface); border-radius: 12px; padding: 2rem; max-width: 380px; width: 100%;
+  position: relative; box-shadow: 0 24px 60px -20px rgba(6, 16, 30, 0.55);
+}
 .auth-brand { display: flex; gap: 12px; align-items: center; margin-bottom: 1.5rem; }
 .auth-mark {
   width: 40px; height: 40px; border-radius: 8px; background: var(--navy); color: #fff;
@@ -249,6 +257,19 @@ th.num { text-align: right; }
   background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.15); z-index: 30;
 }
+
+.notif-dropdown-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: var(--surface);
+  font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em;
+}
+.notif-clear-btn {
+  background: none; border: none; color: var(--accent); font-size: 11px; font-weight: 600;
+  cursor: pointer; padding: 0; text-transform: none; letter-spacing: normal;
+}
+.notif-clear-btn:hover { text-decoration: underline; }
+
 .notif-item { padding: 12px 14px; border-bottom: 1px solid var(--border); }
 .notif-item:last-child { border-bottom: none; }
 .notif-item-unread { background: #EFF4FB; }

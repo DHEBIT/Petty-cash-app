@@ -28,7 +28,7 @@ export default function EmployeeDashboard() {
   const load = useCallback(async () => {
     const [{ data: ledgerData }, { data: reqData }] = await Promise.all([
       supabase.from('petty_cash_ledger').select('*'),
-      supabase.from('petty_cash_requests').select('*').eq('employee_id', profile.id).order('created_at', { ascending: false })
+      supabase.from('petty_cash_requests').select('*').eq('employee_id', profile.id).eq('hidden_by_employee', false).order('created_at', { ascending: false })
     ]);
     if (ledgerData) setLedger(ledgerData);
     if (reqData) setMyRequests(reqData);
@@ -79,6 +79,30 @@ export default function EmployeeDashboard() {
     }
   }
 
+  async function clearHistory() {
+    const resolvedCount = myRequests.filter((r) => r.status !== 'pending').length;
+    if (resolvedCount === 0) {
+      setToast('No resolved requests to clear — pending ones stay visible.');
+      return;
+    }
+    const confirmed = window.confirm(
+      `This will clear ${resolvedCount} resolved request${resolvedCount === 1 ? '' : 's'} from your view. Pending requests stay visible. This only affects what you see — records are kept for company audit purposes.`
+    );
+    if (!confirmed) return;
+
+    const { error } = await supabase
+      .from('petty_cash_requests')
+      .update({ hidden_by_employee: true })
+      .eq('employee_id', profile.id)
+      .neq('status', 'pending');
+
+    if (error) {
+      setToast('Could not clear history: ' + error.message);
+    } else {
+      load();
+    }
+  }
+
   return (
     <>
       <Navbar links={[{ href: '#new-request', label: 'New request' }, { href: '#my-requests', label: 'My requests' }]} />
@@ -119,8 +143,11 @@ export default function EmployeeDashboard() {
           </form>
 
           <div className="card" id="my-requests">
-            <div className="card-header">
+            <div className="card-header card-header-row">
               <h2>Your requests</h2>
+              {myRequests.length > 0 && (
+                <button className="btn btn-ghost btn-sm" onClick={clearHistory}>Clear history</button>
+              )}
             </div>
             {myRequests.length === 0 ? (
               <div className="empty-state">No requests yet.</div>
