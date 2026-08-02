@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext.jsx';
 import PasswordField from '../components/PasswordField.jsx';
 import { scorePassword } from '../utils/passwordStrength.js';
+import AuthFooter from '../components/AuthFooter.jsx';
 
 export default function Login() {
   const { session, profile } = useAuth();
@@ -181,6 +182,7 @@ export default function Login() {
           </p>
         )}
       </div>
+      <AuthFooter />
     </div>
   );
 }
