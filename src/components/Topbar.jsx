@@ -1,20 +1,26 @@
 import { useAuth } from '../context/AuthContext.jsx';
 
+function initials(name) {
+  if (!name) return '?';
+  return name.trim().split(/\s+/).slice(0, 2).map((p) => p[0].toUpperCase()).join('');
+}
+
 export default function Topbar({ title, subtitle }) {
-  const { profile, signOut } = useAuth();
+  const { profile } = useAuth();
+  const firstName = profile?.full_name?.split(/\s+/)?.[0] || profile?.full_name || 'User';
+
   return (
     <header className="topbar">
-      <div>
+      <div className="topbar-title">
         <h1>{title}</h1>
         {subtitle && <p>{subtitle}</p>}
       </div>
-      <div className="topbar-user">
-        <div className="topbar-user-info">
-          <span className="topbar-user-name">{profile?.full_name}</span>
-          <span className="topbar-user-role">{profile?.role}</span>
+      <div className="topbar-right">
+        <div className="topbar-greeting">
+          <span>Hi {firstName}</span>
         </div>
-        <button className="btn btn-ghost" onClick={signOut}>Sign out</button>
+        <div className="topbar-avatar">{initials(profile?.full_name)}</div>
       </div>
     </header>
   );
-} 
+}

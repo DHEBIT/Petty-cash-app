@@ -72,117 +72,120 @@ export default function Login() {
 
   return (
     <div className="auth-screen">
-      <div className="auth-card">
-        <div className="auth-brand">
-          <span className="auth-mark">PC</span>
-          <div>
-            <h1>Petty Cash Ledger</h1>
-            <p>The company's expense request and approval system.</p>
+      <div className="auth-panel">
+        <div className="auth-card">
+          <div className="auth-brand">
+            <span className="auth-mark">PC</span>
+            <div>
+              <h1>Petty Cash Ledger</h1>
+              <p>The company's expense request and approval system.</p>
+            </div>
           </div>
-        </div>
 
-        {mode === 'forgot' ? (
-          <button className="auth-back" onClick={() => { setMode('signin'); setError(''); setInfo(''); }}>
-            ← Back to sign in
-          </button>
-        ) : (
-          <div className="auth-tabs">
-            <button className={mode === 'signin' ? 'active' : ''} onClick={() => { setMode('signin'); setError(''); setInfo(''); }}>Sign in</button>
-            <button className={mode === 'signup' ? 'active' : ''} onClick={() => { setMode('signup'); setError(''); setInfo(''); }}>Create account</button>
-          </div>
-        )}
+          {mode === 'forgot' ? (
+            <button className="auth-back" onClick={() => { setMode('signin'); setError(''); setInfo(''); }}>
+              ← Back to sign in
+            </button>
+          ) : (
+            <div className="auth-tabs">
+              <button className={mode === 'signin' ? 'active' : ''} onClick={() => { setMode('signin'); setError(''); setInfo(''); }}>Sign in</button>
+              <button className={mode === 'signup' ? 'active' : ''} onClick={() => { setMode('signup'); setError(''); setInfo(''); }}>Create account</button>
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          {mode === 'forgot' && (
-            <>
-              <p style={{ marginBottom: 14 }}>Enter your email and we'll send you a link to reset your password.</p>
+          <form onSubmit={handleSubmit} className="auth-form">
+            {mode === 'forgot' && (
+              <>
+                <p style={{ marginBottom: 14 }}>Enter your email and we'll send you a link to reset your password.</p>
+                <div className="field">
+                  <label htmlFor="email">Work email</label>
+                  <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                </div>
+              </>
+            )}
+
+            {mode === 'signup' && (
+              <div className="field">
+                <label htmlFor="fullName">Full name</label>
+                <input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+              </div>
+            )}
+
+            {mode !== 'forgot' && (
               <div className="field">
                 <label htmlFor="email">Work email</label>
                 <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </div>
-            </>
-          )}
+            )}
 
-          {mode === 'signup' && (
-            <div className="field">
-              <label htmlFor="fullName">Full name</label>
-              <input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-            </div>
-          )}
-
-          {mode !== 'forgot' && (
-            <div className="field">
-              <label htmlFor="email">Work email</label>
-              <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-            </div>
-          )}
-
-          {mode !== 'forgot' && (
-            <div className="field">
-              <label htmlFor="password">Password</label>
-              <PasswordField
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={mode === 'signup' ? 8 : 6}
-                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-              />
-              {mode === 'signup' && password && (
-                <div className="strength-meter">
-                  <div className="strength-bar">
-                    {[0, 1, 2, 3, 4].map((i) => (
-                      <div
-                        key={i}
-                        className={`strength-segment${i <= strength.score ? ' filled' : ''}`}
-                        style={{ '--segment-color': strength.color }}
-                      />
-                    ))}
+            {mode !== 'forgot' && (
+              <div className="field">
+                <label htmlFor="password">Password</label>
+                <PasswordField
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={mode === 'signup' ? 8 : 6}
+                  autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                />
+                {mode === 'signup' && password && (
+                  <div className="strength-meter">
+                    <div className="strength-bar">
+                      {[0, 1, 2, 3, 4].map((i) => (
+                        <div
+                          key={i}
+                          className={`strength-segment${i <= strength.score ? ' filled' : ''}`}
+                          style={{ '--segment-color': strength.color }}
+                        />
+                      ))}
+                    </div>
+                    <span className="strength-label" style={{ color: strength.color }}>{strength.label}</span>
                   </div>
-                  <span className="strength-label" style={{ color: strength.color }}>{strength.label}</span>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
+
+            {mode === 'signup' && (
+              <div className="field">
+                <label htmlFor="confirmPassword">Confirm password</label>
+                <PasswordField
+                  id="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  autoComplete="new-password"
+                />
+              </div>
+            )}
+
+            {mode === 'signin' && (
+              <div className="auth-link-row">
+                <button type="button" className="auth-link" onClick={() => { setMode('forgot'); setError(''); setInfo(''); }}>
+                  Forgot password?
+                </button>
+              </div>
+            )}
+
+            {error && <div className="alert alert-error">{error}</div>}
+            {info && <div className="alert alert-info">{info}</div>}
+
+            <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
+              {busy ? 'Please wait…' : mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
+            </button>
+          </form>
+
+          {mode !== 'forgot' && (
+            <p className="auth-footnote">
+              {mode === 'signin'
+                ? "Don't have an account? Use the Create account tab above."
+                : 'Your account starts with standard employee access. Finance permissions are granted separately.'}
+            </p>
           )}
+        </div>
 
-          {mode === 'signup' && (
-            <div className="field">
-              <label htmlFor="confirmPassword">Confirm password</label>
-              <PasswordField
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                autoComplete="new-password"
-              />
-            </div>
-          )}
-
-          {mode === 'signin' && (
-            <div className="auth-link-row">
-              <button type="button" className="auth-link" onClick={() => { setMode('forgot'); setError(''); setInfo(''); }}>
-                Forgot password?
-              </button>
-            </div>
-          )}
-
-          {error && <div className="alert alert-error">{error}</div>}
-          {info && <div className="alert alert-info">{info}</div>}
-
-          <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
-            {busy ? 'Please wait…' : mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
-          </button>
-        </form>
-
-        {mode !== 'forgot' && (
-          <p className="auth-footnote">
-            {mode === 'signin'
-              ? "Don't have an account? Use the Create account tab above."
-              : 'Your account starts with standard employee access. Finance permissions are granted separately.'}
-          </p>
-        )}
+        <AuthFooter />
       </div>
-      <AuthFooter />
     </div>
   );
 }

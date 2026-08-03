@@ -15,17 +15,17 @@ export function exportMonthEnd(ledger, year, month) {
   const monthStart = new Date(year, month - 1, 1);
   const monthEnd = new Date(year, month, 1); // first day of next month (exclusive)
 
+  // rows active within the requested month (exclude voided rows)
   const inMonth = ledger.filter((row) => {
-    const activeInMonth = inMonth.filter((r) => r.status !== 'voided');
     const d = new Date(row.entry_date);
-    return d >= monthStart && d < monthEnd;
+    return row.status !== 'voided' && d >= monthStart && d < monthEnd;
   });
 
   const openingBal = balanceBefore(ledger, monthStart);
-  const imprestTotal = activeInMonth
+  const imprestTotal = inMonth
     .filter((r) => r.entry_type === 'imprest')
     .reduce((s, r) => s + Number(r.amount), 0);
-  const disbursements = activeInMonth
+  const disbursements = inMonth
     .filter((r) => r.entry_type === 'disbursement')
     .sort((a, b) => new Date(a.entry_date) - new Date(b.entry_date));
   const outflowTotal = disbursements.reduce((s, r) => s + Number(r.amount), 0);

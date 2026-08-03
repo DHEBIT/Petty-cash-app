@@ -5,6 +5,8 @@ import Navbar from '../components/Navbar.jsx';
 import StatCard from '../components/StatCard.jsx';
 import LedgerCodePicker from '../components/LedgerCodePicker.jsx';
 import { exportMonthEnd } from '../utils/exportLedger.js';
+import Sidebar from '../components/Sidebar.jsx';
+import Topbar from '../components/Topbar.jsx';
 
 function computeCashAtHand(ledger) {
   return ledger
@@ -37,6 +39,9 @@ export default function AdminDashboard() {
   const [editForm, setEditForm] = useState({ beneficiary: '', purpose: '', ledger_code: '' });
   const [voidingId, setVoidingId] = useState(null);
   const [voidReason, setVoidReason] = useState('');
+  const [ledgerSearch, setLedgerSearch] = useState('');
+  const [ledgerPage, setLedgerPage] = useState(1);
+  const LEDGER_PAGE_SIZE = 15;
 
   const load = useCallback(async () => {
     const [{ data: ledgerData }, { data: reqData }] = await Promise.all([
@@ -200,9 +205,28 @@ export default function AdminDashboard() {
     return { ...row, balanceAfter: running };
   });
 
+  const reversedLedger = [...ledgerWithBalance].reverse();
+  const filteredLedger = ledgerSearch.trim()
+    ? reversedLedger.filter((row) => {
+        const q = ledgerSearch.trim().toLowerCase();
+        return (
+          (row.beneficiary || '').toLowerCase().includes(q) ||
+          (row.purpose || '').toLowerCase().includes(q) ||
+          (row.ledger_code || '').toLowerCase().includes(q) ||
+          row.entry_type.toLowerCase().includes(q)
+        );
+      })
+    : reversedLedger;
+  const ledgerTotalPages = Math.max(1, Math.ceil(filteredLedger.length / LEDGER_PAGE_SIZE));
+  const ledgerPageClamped = Math.min(ledgerPage, ledgerTotalPages);
+  const pagedLedger = filteredLedger.slice(
+    (ledgerPageClamped - 1) * LEDGER_PAGE_SIZE,
+    ledgerPageClamped * LEDGER_PAGE_SIZE
+  );
+
   return (
-    <>
-      <Navbar
+    <div className="app">
+      <Sidebar
         links={[
           { href: '#pending', label: 'Pending' },
           { href: '#ledger', label: 'Ledger' },
@@ -210,8 +234,10 @@ export default function AdminDashboard() {
           { href: '#export', label: 'Export' }
         ]}
       />
-      <div className="dashboard">
-        <section className="stat-grid">
+      <div className="app-right">
+        <Topbar title="Petty Cash Ledger — Finance" />
+        <main className="main">
+          <section className="stat-grid">
           <StatCard label="Cash at hand" value={`GHS ${cashAtHand.toFixed(2)}`} />
           <StatCard label="Pending requests" value={pending.length} tone={pending.length > 0 ? 'attention' : undefined} />
           <StatCard label="Ledger entries" value={ledger.length} />
@@ -327,7 +353,14 @@ export default function AdminDashboard() {
 
         <section className="card" id="ledger">
           <div className="card-header"><h2>Ledger</h2></div>
-          <div className="table-wrap">
+          <div style={{ margin: '14px 18px 0' }} className="table-search">
+            <input
+              placeholder="Search:"
+              value={ledgerSearch}
+              onChange={(e) => { setLedgerSearch(e.target.value); setLedgerPage(1); }}
+            />
+          </div>
+          <div className="table-wrap" style={{ margin: '10px 18px 0' }}>
             <table>
               <thead>
                 <tr>
@@ -336,7 +369,7 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {[...ledgerWithBalance].reverse().map((row) => {
+                {pagedLedger.map((row) => {
                   const isVoided = row.status === 'voided';
                   const isEditing = editingId === row.id;
                   const isVoiding = voidingId === row.id;
@@ -411,8 +444,33 @@ export default function AdminDashboard() {
               </tbody>
             </table>
           </div>
+          <div className="table-pagination" style={{ margin: '10px 18px 16px' }}>
+            <span>
+              Showing {filteredLedger.length === 0 ? 0 : (ledgerPageClamped - 1) * LEDGER_PAGE_SIZE + 1}
+              {' '}to {Math.min(ledgerPageClamped * LEDGER_PAGE_SIZE, filteredLedger.length)} of {filteredLedger.length} entries
+            </span>
+            <span className="table-pagination-pages">
+              <button disabled={ledgerPageClamped === 1} onClick={() => setLedgerPage(ledgerPageClamped - 1)}>Previous</button>
+              {Array.from({ length: ledgerTotalPages }, (_, i) => i + 1)
+                .filter((p) => p === 1 || p === ledgerTotalPages || Math.abs(p - ledgerPageClamped) <= 1)
+                .reduce((acc, p, idx, arr) => {
+                  if (idx > 0 && p - arr[idx - 1] > 1) acc.push('…');
+                  acc.push(p);
+                  return acc;
+                }, [])
+                .map((p, idx) =>
+                  p === '…' ? (
+                    <span key={`ellipsis-${idx}`} style={{ padding: '3px 4px' }}>…</span>
+                  ) : (
+                    <button key={p} className={p === ledgerPageClamped ? 'active' : ''} onClick={() => setLedgerPage(p)}>{p}</button>
+                  )
+                )}
+              <button disabled={ledgerPageClamped === ledgerTotalPages} onClick={() => setLedgerPage(ledgerPageClamped + 1)}>Next</button>
+            </span>
+          </div>
         </section>
+        </main>
       </div>
-    </>
+    </div>
   );
 }

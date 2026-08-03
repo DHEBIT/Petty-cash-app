@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext.jsx';
 import Navbar from '../components/Navbar.jsx';
 import StatCard from '../components/StatCard.jsx';
 import StatusBadge from '../components/StatusBadge.jsx';
+import Sidebar from '../components/Sidebar.jsx';
+import Topbar from '../components/Topbar.jsx';
 
 function computeCashAtHand(ledger) {
   return ledger
@@ -104,10 +106,17 @@ export default function EmployeeDashboard() {
   }
 
   return (
-    <>
-      <Navbar links={[{ href: '#new-request', label: 'New request' }, { href: '#my-requests', label: 'My requests' }]} />
-      <div className="dashboard">
-        <section className="stat-grid">
+    <div className="app">
+      <Sidebar
+        links={[
+          { href: '#new-request', label: 'New request' },
+          { href: '#my-requests', label: 'My requests' }
+        ]}
+      />
+      <div className="app-right">
+        <Topbar title="Petty Cash Ledger" />
+        <main className="main">
+          <section className="stat-grid">
           <StatCard label="Cash at hand" value={`GHS ${cashAtHand.toFixed(2)}`} />
           <StatCard label="Your pending requests" value={myRequests.filter(r => r.status === 'pending').length} />
           <StatCard label="Your fulfilled requests" value={myRequests.filter(r => r.status === 'fulfilled').length} />
@@ -174,7 +183,8 @@ export default function EmployeeDashboard() {
             )}
           </div>
         </section>
+        </main>
       </div>
-    </>
+    </div>
   );
 }
