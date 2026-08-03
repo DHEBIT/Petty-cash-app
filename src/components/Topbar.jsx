@@ -1,4 +1,5 @@
 import { useAuth } from '../context/AuthContext.jsx';
+import NotificationBell from './NotificationBell.jsx';
 
 function initials(name) {
   if (!name) return '?';
@@ -20,6 +21,7 @@ export default function Topbar({ title, subtitle }) {
           <span>Hi {firstName}</span>
         </div>
         <div className="topbar-avatar">{initials(profile?.full_name)}</div>
+        <NotificationBell />
       </div>
     </header>
   );
